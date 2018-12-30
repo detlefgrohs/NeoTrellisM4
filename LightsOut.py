@@ -1,25 +1,3 @@
-import math
-import time
-import array
-import board
-import busio
-import audioio
-import adafruit_trellis_express
-import adafruit_adxl34x
-
-time.sleep(10.0)
-
-trellis = adafruit_trellis_express.TrellisM4Express(rotation=90)
-
-i2c = busio.I2C(board.ACCELEROMETER_SCL, board.ACCELEROMETER_SDA)
-accelerometer = adafruit_adxl34x.ADXL345(i2c)
-
-print('Starting up...')
-
-# Clear all pixels
-trellis.pixels._neopixel.fill((0, 0, 0))
-trellis.pixels._neopixel.show()
-
 import random
 
 class LightsOutBoard:
@@ -72,23 +50,27 @@ class LightsOutBoard:
                 self.toggleCell(x-1, y, False)
                 self.toggleCell(x+1, y, False)
 
-    def updateTrellis(self, trellis):
-        for x in range(self.xSize):
-            for y in range(self.ySize):
-                trellis.pixels._neopixel.pixels((y, x)) = lightOnColor if self.Board[x][y] else lightOffColor
-        trellis.pixels._neopixel.show()
 
 board = LightsOutBoard(8, 4)
+
 board.displayBoard()
 
-while True:
-    print('In loop')
-    stamp = time.monotonic()
+board.toggleCell(0,0)
+board.displayBoard()
 
-    board.updateTrellis(trellis)
-    board.generateRandomBoard()
-    board.displayBoard()
+board.toggleCell(1,1)
+board.displayBoard()
 
-    while time.monotonic() - stamp < 1.0:
-        time.sleep(0.01)  # a little delay here helps avoid debounce annoyances
+board.generateRandomBoard()
+board.displayBoard()
 
+board.toggleCell(0,0)
+board.displayBoard()
+
+board.toggleCell(1,1)
+board.displayBoard()
+
+
+board = LightsOutBoard(8,4,1)
+board.displayBoard()
+print(board.hasWon(True))
