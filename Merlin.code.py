@@ -23,13 +23,12 @@ trellis.pixels._neopixel.show()
 import random
 
 class LightsOutBoard:
-    lightOffColor = (0, 0, 0)
-    lighOnColor = (255, 255, 255)
-
     def __init__(self, xSize, ySize, initialValue = False):
         self.xSize = xSize
         self.ySize = ySize
         self.Board = [ [ initialValue for y in range(ySize) ] for x in range(xSize) ]
+        self.lightOffColor = (0, 0, 0)
+        self.lightOnColor = (255, 255, 255)
 
     def displayBoard(self):
         print("Board: %s" % ("Won" if self.hasWon() else "!Won"))
@@ -75,20 +74,45 @@ class LightsOutBoard:
     def updateTrellis(self, trellis):
         for x in range(self.xSize):
             for y in range(self.ySize):
-                trellis.pixels._neopixel.pixels((y, x)) = lightOnColor if self.Board[x][y] else lightOffColor
-        trellis.pixels._neopixel.show()
+                trellis.pixels[(y, x)] = self.lightOnColor if self.Board[x][y] else self.lightOffColor
+        #trellis.pixels._neopixel.show()
 
 board = LightsOutBoard(8, 4)
-board.displayBoard()
 
 while True:
-    print('In loop')
-    stamp = time.monotonic()
 
-    board.updateTrellis(trellis)
     board.generateRandomBoard()
+    board.updateTrellis(trellis)
     board.displayBoard()
 
-    while time.monotonic() - stamp < 1.0:
-        time.sleep(0.01)  # a little delay here helps avoid debounce annoyances
+    last_pressed = set()
 
+    while board.hasWon() == False:
+        stamp = time.monotonic()
+
+        pressed = set(trellis.pressed_keys)
+
+        for down in pressed - last_pressed:
+            print("Pressed down", down)
+
+            y = down[0]
+            x = down[1]
+
+            board.toggleCell(x, y)
+
+            board.updateTrellis(trellis)
+            board.displayBoard()
+
+        last_pressed = pressed
+
+        while time.monotonic() - stamp < 0.1:
+            time.sleep(0.01)  # a little delay here helps avoid debounce annoyances
+
+    for count in range(5):
+        trellis.pixels._neopixel.fill((255, 0, 0))
+        trellis.pixels._neopixel.show()
+        time.sleep(0.5)
+
+        trellis.pixels._neopixel.fill((0, 0, 0))
+        trellis.pixels._neopixel.show()
+        time.sleep(0.5)
